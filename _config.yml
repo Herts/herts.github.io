@@ -23,7 +23,7 @@ github_username:  herts
 
 # Build settings
 markdown: kramdown
-theme: minima
+theme: jekyll-theme-tactile
 plugins:
   - jekyll-feed
 
