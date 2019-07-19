@@ -47,7 +47,7 @@ category: programming
   - MyBatis Generator无法区别catalog和schema，
     > Just specify table names and specify the database in the JDBC URL.
     > If you are using version 8.x of Connector/J you may notice that the generator attempts to generate code for tables in the MySql information schemas (sys, information_schema, performance_schema, etc.) This is probably not what you want! To disable this behavior, add the property "nullCatalogMeansCurrent=true" to your JDBC URL.
-    > Source: http://www.mybatis.org/generator/usage/mysql.html
+    > Source: [MyBatis-Documentation](http://www.mybatis.org/generator/usage/mysql.html)
   - MyBatis作为Maven Plugin时，要加入dependency：
 
 ```xml
