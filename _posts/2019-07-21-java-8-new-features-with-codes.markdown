@@ -103,3 +103,23 @@ Both can be accessed by lambda expressions.
 
 #### Default Interface Methods
 Cannot be accessed.
+
+### Stream
+Exercises for Stream: [Exercises to study Java Stream API](http://binkurt.blogspot.com/2017/10/exercises-to-study-java-stream-api.html)
+#### The difference between ``IntStream.range(1,5)`` and ``StreamOf(1,2,3,4)``
+boxed() must be called with ``IntStream``.
+```Java
+List<Integer> integerList =
+        Stream.of(1,2,3,4)
+        .map(i -> i * i)
+        .collect(Collectors.toList());
+
+integerList.forEach(System.out::println);
+
+List<Integer> collect = IntStream.range(1, 5)
+        .map(i -> i * i)
+        .boxed()
+        .collect(Collectors.toList());
+
+collect.forEach(System.out::println);
+```
