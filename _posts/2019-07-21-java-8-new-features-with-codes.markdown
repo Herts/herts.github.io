@@ -104,6 +104,39 @@ Both can be accessed by lambda expressions.
 #### Default Interface Methods
 Cannot be accessed.
 
+### Built-in Functional interfaces
+#### Consumer
+Takes one input, and produces one result.
+```Java
+Consumer<Integer> display = System.out::println;
+display.accept(10); // => System.out.println(10)
+
+Consumer<Integer> modify = i -> i * 2;
+modify.andThen(display).accept(10); // => System.out.println(10*2)
+```
+#### BiConsumer
+Takes two inputs, and produces one result.
+```Java
+BiConsumer<List<Integer>, List<Integer>> displayList = (list1, list2) -> list1.forEach(System.out::println);
+
+BiConsumer<List<Integer>, List<Integer>> add = (list1, list2) -> {
+    int min = list1.size() > list2.size() ? list2.size() : list1.size();
+    for (int i = 0; i < min; i++) {
+        list1.set(i, list1.get(i) * list2.get(i));
+    }
+};
+
+List<Integer> list1 = IntStream.range(1,8).boxed().collect(Collectors.toList());
+List<Integer> list2 = IntStream.range(3,9).boxed().collect(Collectors.toList());
+
+add.andThen(displayList).accept(list1, list2);
+```
+
+
+### Optional
+Nifty utilities to prevent ``NullPointerException``. Instead of returning ``null``, return an ``Optional``.
+
+
 ### Stream
 Exercises for Stream: [Exercises to study Java Stream API](http://binkurt.blogspot.com/2017/10/exercises-to-study-java-stream-api.html)
 #### The difference between ``IntStream.range(1,5)`` and ``StreamOf(1,2,3,4)``
