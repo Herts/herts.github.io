@@ -15,6 +15,7 @@ public class MyFormula implements Formula { /* calculate does not need to be imp
 ```
 
 ### Lambda Expressions
+[Lambda Exercises]()
 ```Java
 public static <T> void sort(List<T> list, Comparator<? super T> c) {
     list.sort(c);
@@ -42,6 +43,10 @@ Using List.sort():
 ```Java
 names.sort((a, b) -> b.compareTo(a));
 ```
+
+#### Debugging
+Use peek to check intermediate value
+``.peek(val -> System.out.println(val))``
 
 ### Functional Interfaces
 - Interfaces including one and only one abstract method.
@@ -156,3 +161,9 @@ List<Integer> collect = IntStream.range(1, 5)
 
 collect.forEach(System.out::println);
 ```
+#### Method: Eager or Lazy?
+Lazy: return Stream object, like: ``.filter`` ``.map``
+Eager: like: ``.collect``
+
+#### Higher-Order Functions
+A function either takes a function as input or returns a function as result.
