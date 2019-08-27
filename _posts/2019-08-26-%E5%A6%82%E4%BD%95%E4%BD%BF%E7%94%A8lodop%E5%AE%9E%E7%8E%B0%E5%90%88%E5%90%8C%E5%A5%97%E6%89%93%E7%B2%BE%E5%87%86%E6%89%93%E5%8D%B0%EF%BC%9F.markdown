@@ -1,0 +1,109 @@
+---
+layout: post
+title: "如何使用LODOP实现合同套打精准打印？"
+date: "2019-08-26 19:10:59 -0700"
+---
+# 如何使用LODOP实现合同套打精准打印？
+
+  了解了Jasper Reports/ Jasper Reports Studio/ iReports(Jasper Reports Studio同期产品，现在已经不维护了)之后，发现了这样一篇文章，比较符合我的需求：[【lodop】套打小结 ](https://blog.csdn.net/zzh920625/article/details/79114046)。
+  我的需求是建立在一套纸质的合同模板上，上面有大量不同信息的空需要填入，因而要求：
+1. 精准定位：打印时，字字入空。
+2. 数据从数据库或接口传入。
+3. 打印之前至少可预览，尽量可修改。
+4. 本篇文章所使用的代码：[Python生成坐标](https://github.com/Herts/RedDotsFinder) | [Golang 配合Lodop完成前后端](https://github.com/Herts/LodopWithGolang)
+5. 本文参考代码：[一个基于 Lodop 控件的 Web 打印示例](https://github.com/whorusq/web-printer-with-Lodop)
+## 精准定位
+```mermaid
+graph LR;
+    精准定位-->文档标记;
+    文档标记-->转PDF转图片;
+    转PDF转图片-->识别标记转换坐标;
+```
+### 文档标记
+
+我需要实现套打的合同有Word版本，直接在每个需要填空的地方加入一个红色英文句点： <font color=#FF0000 size=72>. </font>，RGB值为(255,0,0)，方便过滤识别。资源见[合同Docx](https://github.com/Herts/RedDotsFinder/tree/master/resource/docx)。
+
+### 文档转为PDF
+
+使用Microsoft Print to PDF就好。资源见[合同pdf](https://github.com/Herts/RedDotsFinder/tree/master/resource/pdf)。
+
+### PDF文档转换为JPG图片
+
+我使用的转换工具为[Convert PDF to JPG online](http://convert-my-image.com/PdfToJpg)
+Quality (DPI)设置为600即（4961 × 7016）。**LODOP中所使用的A4大小为794×1123像素，等同于210mm×297mm，是DPI 96。但由于此时像素过低，红色句点很难过滤。只能通过DPI 600 下的坐标 * 794 / 4961进行计算。资源见[合同图片](https://github.com/Herts/RedDotsFinder/tree/master/resource/pics)。**
+
+### 识别标记并转换坐标
+
+使用Python以及cv2库写了一个程序，见本文所使用的代码：[Python生成坐标](https://github.com/Herts/RedDotsFinder)
+会直接输出LODOP的语句：``LODOP.ADD_PRINT_TEXT(21893, 199, 100, 20, "1");``
+
+## 制作套打模板
+```mermaid
+graph LR;
+    确定坐标-->获取数据;
+    获取数据-->插入数据;
+```
+### 确定坐标
+此处请前往LODOP官网先安装下载LODOP控件：[LODOP下载中心](http://www.lodop.net/download.html)。
+然后将代码插入到以下网页当中，在目录``static/js``保存``LodopFuncs.js``，打开网页后可以预览到生成的页面。
+
+```html
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+</head>
+<body>
+
+<script language="javascript" src="static/js/LodopFuncs.js"></script>
+<script language="javascript" type="text/javascript">
+    var LODOP; //声明为全局变量
+    function CreatePrintPage() {
+        LODOP = getLodop();
+		// 根据需要修改以下设置
+		// 794 * 1123 是LODOP中A4的像素表示
+        LODOP.PRINT_INITA(0, 0, 794, 1123, "__演示文件__"); // 此处文档名称将会在客户端使用时决定是否保存套打配置，如果无名字将每次使用服务器端的套打设置。
+        LODOP.SET_PRINT_MODE("CUSTOM_TASK_NAME", "__演示文件__"); // 打印队列中的文档名
+        LODOP.ADD_PRINT_SETUP_BKIMG("__背景图文件位置__");
+        LODOP.SET_SHOW_MODE("BKIMG_WIDTH", "210mm"); // A4
+        LODOP.SET_SHOW_MODE("BKIMG_HEIGHT", "297mm"); // A4
+        LODOP.SET_SHOW_MODE("BKIMG_IN_PREVIEW", true);
+		//  如下位置插入Python程序生成的代码
+
+    }
+</script>
+进入<a href="javascript:" onclick="CreatePrintPage();LODOP.PRINT_DESIGN();">模板设计</a><br><br>
+进入<a href="javascript:" onclick="CreatePrintPage();LODOP.PREVIEW();">模板的打印预览</a>
+</body>
+</html>
+```
+点击页面的模板设计，就可以成功进入LODOP的设计页面。点击预览后打印，可以实现无水印打印。此处建议打印到纸质合同上，方便Debug。
+### 获取数据
+  获取数据采用了 [web-printer-with-Lodop](https://github.com/whorusq/web-printer-with-Lodop)的方法，使用了jQuery，用JSON数据做套打填空的数据。
+  我使用了Intellij Idea的Web预览，否则可能json无法读取。[见demo-json](https://github.com/Herts/LodopWithGolang-Demo/blob/master/static/json/demo.json)。
+
+  ```javascript
+    var data = {};
+    function getData() {
+        $.ajax({
+            type: 'post',
+            url: '/static/json/demo.json', // 这里是处理过的演示数据
+            // data: {id: '{:I("get.id")}'},
+            async: false,
+            dataType: 'json',
+            success: function (result) {
+                data = result;
+            }
+        })
+    }
+  ```
+
+### 插入数据
+插入数据时对要填空的位置进行定位，此时建议在纸质套打的合同上打印好后直接按标号进行对应编程。
+## 测试调试
+有些空的大小在填入该写入的数据后，宽度或高度不符合要求，调整``    LODOP.ADD_PRINT_TEXT(181, 231, 100, 20, "1");
+``前两个参数即可。
+
+## 完成打印
+
+先在Lodop打印成PDF，再打印PDF，否则会有偏移。另外在PDF打印时要确定打印比例，要与打印版合同一致。
+
